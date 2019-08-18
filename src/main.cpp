@@ -1,6 +1,6 @@
 // generic lib e.g. for Serial
 #include <Arduino.h>
-// OLED lib
+// OLED lib for chipset SSD1306
 #include <ACROBOTIC_SSD1306.h>
 // for white temp and huminity sensor DHT22
 #include "DHT.h"
@@ -14,6 +14,11 @@
 OneWire oneWire(26); // a 4.7K resistor is necessary between red & yellow
 DallasTemperature dsSensors(&oneWire);
 DHT dht(27, DHT22);  // the resistor is already on the board in our case
+
+// GPIOs 34-39 are input-only *and* do not have internal pull-up or pull-down circuitry. This is mentioned in Appendix C.1 of the datasheet, Number 2 in the table.
+// DS18B20 sensor uses onewire (data) and OLED uses I2C where there are two data wires: SCL for clock and SDA for data
+// 1-Wire: Longer distance. Slower. Strictly master-slave. Theoretically, patent protected. Can easily be implemented in software. Requires 4.7k resistor
+// I2C: Shorter distance (can be extended with separate dedicated chips).  Much faster.  Multi-master.  Practically requires dedicated hardware.
 
 void setup() {
   Serial.begin(9600);
