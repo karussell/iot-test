@@ -15,8 +15,8 @@
 #define LED_BUILTIN 2
 
 #define WITH_LED false
-#define WITH_OLED false
-#define WITH_DHT false
+#define WITH_OLED true
+#define WITH_DHT true
 #define WITH_DS true
 
 DHT dht(27, DHT22);
@@ -103,6 +103,7 @@ void loop() {
   }
 
   if(WITH_DS) {
+    delay(3000);
     // call sensors.requestTemperatures() to issue a global temperature request to all devices on the bus
     dsSensors.requestTemperatures();
     Serial.println("read temperature ...");
