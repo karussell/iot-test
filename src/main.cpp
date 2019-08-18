@@ -1,27 +1,19 @@
-// OLED
-#include <Wire.h>
-// also OLED
-#include <ACROBOTIC_SSD1306.h>
-// generic lib
+// generic lib e.g. for Serial
 #include <Arduino.h>
+// OLED lib
+#include <ACROBOTIC_SSD1306.h>
 // for white temp and huminity sensor DHT22
 #include "DHT.h"
-// for black&long temp sensor DS18B20
-#include <OneWire.h>
-// make using OneWire lib simpler:
+// black temp sensor DS18B20
 #include <DallasTemperature.h>
 
-// LED somehow does not work when explicitely controlled
-#define LED_BUILTIN 2
-
-#define WITH_LED false
 #define WITH_OLED true
 #define WITH_DHT true
 #define WITH_DS true
 
-DHT dht(27, DHT22);
-OneWire oneWire(26);  // TODO a 4.7K resistor is necessary
+OneWire oneWire(26); // a 4.7K resistor is necessary between red & yellow
 DallasTemperature dsSensors(&oneWire);
+DHT dht(27, DHT22);  // the resistor is already on the board in our case
 
 void setup() {
   Serial.begin(9600);
@@ -39,11 +31,6 @@ void setup() {
     dht.begin();
   }
 
-  if(WITH_LED) {
-    // initialize LED digital pin as an output.
-    pinMode(LED_BUILTIN, OUTPUT);
-  }
-
   if(WITH_DS) {
     dsSensors.begin();
   }
@@ -52,14 +39,6 @@ void setup() {
 int counter = 0;
 
 void loop() {
-  if(WITH_LED) {
-    // turn the LED on (HIGH is the voltage level and later low)
-    digitalWrite(LED_BUILTIN, HIGH);
-    delay(1000);
-    digitalWrite(LED_BUILTIN, LOW);
-    delay(500);
-  }
-
   counter++;
 
   if(WITH_OLED) {
@@ -95,7 +74,7 @@ void loop() {
 
     oled.setTextXY(3, 0);
     oled.putFloat(t);
-    oled.putString(" 'C ");
+    oled.putString(" 'C (DHT22)");
 
     oled.setTextXY(5, 0);
     oled.putFloat(h);
@@ -110,8 +89,12 @@ void loop() {
     // get the temperature from the first sensor only.
     float tempC = dsSensors.getTempCByIndex(0);
     if(tempC != DEVICE_DISCONNECTED_C) {
-      Serial.print("Temperature for the device 1 (index 0) is: ");
+      Serial.print("Temperature for DS 0 is: ");
       Serial.println(tempC);
+
+      oled.setTextXY(7, 0);
+      oled.putFloat(tempC);
+      oled.putString(" 'C (DS18)");
     } else {
       Serial.println("Error: Could not read temperature data");
     }
