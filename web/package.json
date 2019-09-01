@@ -1,0 +1,9 @@
+{
+  "name": "my-data-server",
+  "description": "log data server",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "express": "4.17.1"
+  }
+}
