@@ -8,12 +8,13 @@
 #include <DallasTemperature.h>
 
 // edit and copy the following lines into constants.h
-// #define LOG_HOST "http://YOUR-NODE-JS-SERVER:port"
+// const char* logHost = "http://your-host:8000/";
 // const char* ssid = "YOUR";
 // const char* password = "YOUR";
 #include "constants.h"
 
 // send data to our server reachable over wifi via http client
+// make sure your router and firewall allows device "espressif" reaching out to potentially remove "logHost" service
 #include "WiFi.h"
 #include <HTTPClient.h>
 
@@ -21,6 +22,7 @@
 #define WITH_DHT false
 #define WITH_DS false
 #define WITH_WIFI true
+#define DELAY_IN_S 120
 
 
 OneWire oneWire(26); // a 4.7K resistor is necessary between red & yellow
@@ -33,20 +35,14 @@ DHT dht(27, DHT22);  // the resistor is already on the board in our case
 // I2C: Shorter distance (can be extended with separate dedicated chips).  Much faster.  Multi-master.  Practically requires dedicated hardware.
 
 void setup() {
-  // always setup serial connection and dht sensor
+  // always setup serial connection and sensors
   Serial.begin(9600);
   Serial.println("Start ESP setup");
   dht.begin();
+  dsSensors.begin();
 
-  if(WITH_WIFI) {
-    WiFi.begin(ssid, password);
-    Serial.print("Connecting to WiFi");
-    while (WiFi.status() != WL_CONNECTED) {
-      delay(200);
-      Serial.print(".");
-    }
-    Serial.println();
-  }
+  // configure to sleep 5 million ms
+  esp_sleep_enable_timer_wakeup(DELAY_IN_S * 1e6);
 
   if(WITH_OLED) {
     Wire.begin();
@@ -54,10 +50,6 @@ void setup() {
     oled.clearDisplay();
     // oled.setFont(font5x7); 
     oled.setFont(font5x7); 
-  }
-
-  if(WITH_DS) {
-    dsSensors.begin();
   }
 }
 
@@ -110,7 +102,6 @@ void loop() {
     delay(3000);
     // call sensors.requestTemperatures() to issue a global temperature request to all devices on the bus
     dsSensors.requestTemperatures();
-    Serial.println("read temperature ...");
     // get the temperature from the first sensor only.
     float tempC = dsSensors.getTempCByIndex(0);
     if(tempC != DEVICE_DISCONNECTED_C) {
@@ -126,30 +117,48 @@ void loop() {
   }
 
   if(WITH_WIFI) {
-    if(WiFi.status() != WL_CONNECTED) {
-      Serial.println("wifi connection not ready");
-    } else {
-      // read temp and humidity
-      float h = dht.readHumidity();
-      float t = dht.readTemperature();
-      if (isnan(h) || isnan(t)) {
-        Serial.println(F("Failed to read from DHT sensor!"));
+    // if an error happens e.g. on sensor read at least wait this time
+    delay(3000);
+
+    // read temperatures first, then do wifi
+    dsSensors.requestTemperatures();
+    float dsTemp = dsSensors.getTempCByIndex(0);
+    if(dsTemp == DEVICE_DISCONNECTED_C) {
+        Serial.println(F("Failed to read from DS temp sensor!"));
         return;
-      }
-      Serial.println("start request");
-      HTTPClient http;
-      http.begin(LOG_HOST);
-      http.addHeader("Content-Type", "text/plain");
-      int httpResponseCode = http.POST(String(t) + "," + String(h));
-      if(httpResponseCode < 0) {
-        Serial.println("cannot send data");
-        Serial.println(httpResponseCode);
-      }
-
-      http.end();
-
-      // do not send too often
-      delay(20000);
     }
+
+    // read temp and humidity
+    float h = dht.readHumidity();
+    float t = dht.readTemperature();
+    if (isnan(h) || isnan(t)) {
+      Serial.println(F("Failed to read from DHT sensor!"));
+      return;
+    }
+
+    WiFi.begin(ssid, password);
+    Serial.print("Connecting to WiFi");
+    while (WiFi.status() != WL_CONNECTED) {
+      delay(200);
+      Serial.print(".");
+    }
+    Serial.println();
+    Serial.print("start request to ");
+    Serial.println(logHost);
+    HTTPClient http;
+    http.begin(logHost);
+    http.addHeader("Content-Type", "text/plain");
+    int httpResponseCode = http.POST(String(h) + "," + String(t) + ", " + String(dsTemp));
+    if(httpResponseCode < 0) {
+      Serial.println("cannot send data");
+      Serial.println(httpResponseCode);
+    }
+
+    http.end();
+    WiFi.disconnect();
+
+    delay(DELAY_IN_S * 1000);
+    // TODO NOW: instead of delay go to deep sleep. But do this only if we have a battery pack that does not disable itself after too few mA
+    // esp_deep_sleep_start();
   }
 }

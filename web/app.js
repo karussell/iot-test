@@ -5,6 +5,8 @@ var port = 8000;
 var express = require("express");
 var app = express();
 
+var lastEntry = "not initialized";
+
 app.use('/public', express.static(__dirname + '/public'));
 
 function rawBody(req, res, next) {
@@ -20,11 +22,12 @@ function rawBody(req, res, next) {
 app.use(rawBody);
 
 app.get("/", function(req, res) {
-    res.send("Hello!!");
+    res.send(lastEntry);
 });
 
 app.post("/", function(req, res) {
     var s = new Date().toISOString() + "," + req.rawBody
+    lastEntry = s
     console.log(s)
     var stream = fs.createWriteStream("out.log", {flags:'a'})
     stream.write(s + "\n")
