@@ -24,11 +24,12 @@ app.get("/", function(req, res) {
 });
 
 app.post("/", function(req, res) {
-    console.log(new Date().toISOString() + " " + req.rawBody)
-    var stream = fs.createWriteStream("out.log", {flags:'a'});
-    stream.write(req.rawBody + "\n")
-    stream.end();
-    res.send('ok');
+    var s = new Date().toISOString() + "," + req.rawBody
+    console.log(s)
+    var stream = fs.createWriteStream("out.log", {flags:'a'})
+    stream.write(s + "\n")
+    stream.end()
+    res.send('ok')
 });
 
 app.listen(port, host);

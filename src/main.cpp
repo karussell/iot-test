@@ -7,9 +7,21 @@
 // black temp sensor DS18B20
 #include <DallasTemperature.h>
 
-#define WITH_OLED true
-#define WITH_DHT true
-#define WITH_DS true
+// edit and copy the following lines into constants.h
+// #define LOG_HOST "http://YOUR-NODE-JS-SERVER:port"
+// const char* ssid = "YOUR";
+// const char* password = "YOUR";
+#include "constants.h"
+
+// send data to our server reachable over wifi via http client
+#include "WiFi.h"
+#include <HTTPClient.h>
+
+#define WITH_OLED false
+#define WITH_DHT false
+#define WITH_DS false
+#define WITH_WIFI true
+
 
 OneWire oneWire(26); // a 4.7K resistor is necessary between red & yellow
 DallasTemperature dsSensors(&oneWire);
@@ -21,8 +33,20 @@ DHT dht(27, DHT22);  // the resistor is already on the board in our case
 // I2C: Shorter distance (can be extended with separate dedicated chips).  Much faster.  Multi-master.  Practically requires dedicated hardware.
 
 void setup() {
+  // always setup serial connection and dht sensor
   Serial.begin(9600);
-  Serial.println("Start");
+  Serial.println("Start ESP setup");
+  dht.begin();
+
+  if(WITH_WIFI) {
+    WiFi.begin(ssid, password);
+    Serial.print("Connecting to WiFi");
+    while (WiFi.status() != WL_CONNECTED) {
+      delay(200);
+      Serial.print(".");
+    }
+    Serial.println();
+  }
 
   if(WITH_OLED) {
     Wire.begin();
@@ -30,10 +54,6 @@ void setup() {
     oled.clearDisplay();
     // oled.setFont(font5x7); 
     oled.setFont(font5x7); 
-  }
-
-  if(WITH_DHT) {
-    dht.begin();
   }
 
   if(WITH_DS) {
@@ -102,6 +122,34 @@ void loop() {
       oled.putString(" 'C (DS18)");
     } else {
       Serial.println("Error: Could not read temperature data");
+    }
+  }
+
+  if(WITH_WIFI) {
+    if(WiFi.status() != WL_CONNECTED) {
+      Serial.println("wifi connection not ready");
+    } else {
+      // read temp and humidity
+      float h = dht.readHumidity();
+      float t = dht.readTemperature();
+      if (isnan(h) || isnan(t)) {
+        Serial.println(F("Failed to read from DHT sensor!"));
+        return;
+      }
+      Serial.println("start request");
+      HTTPClient http;
+      http.begin(LOG_HOST);
+      http.addHeader("Content-Type", "text/plain");
+      int httpResponseCode = http.POST(String(t) + "," + String(h));
+      if(httpResponseCode < 0) {
+        Serial.println("cannot send data");
+        Serial.println(httpResponseCode);
+      }
+
+      http.end();
+
+      // do not send too often
+      delay(20000);
     }
   }
 }
