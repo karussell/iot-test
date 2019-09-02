@@ -41,7 +41,7 @@ void setup() {
   dht.begin();
   dsSensors.begin();
 
-  // configure to sleep 5 million ms
+  // configure to sleep X million ms
   esp_sleep_enable_timer_wakeup(DELAY_IN_S * 1e6);
 
   if(WITH_OLED) {
@@ -148,7 +148,7 @@ void loop() {
     HTTPClient http;
     http.begin(logHost);
     http.addHeader("Content-Type", "text/plain");
-    int httpResponseCode = http.POST(String(h) + "," + String(t) + ", " + String(dsTemp));
+    int httpResponseCode = http.POST(String(h) + "," + String(t) + "," + String(dsTemp));
     if(httpResponseCode < 0) {
       Serial.println("cannot send data");
       Serial.println(httpResponseCode);

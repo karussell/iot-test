@@ -1,0 +1,103 @@
+<html>
+<head>
+    <title>Plot ESP32</title>
+    <script src="js/plotly-1.5.0.min.js"></script>
+    <script src="js/jquery-3.3.1.min.js"></script>
+</head>
+<body>
+
+<div id="chart0"/>
+
+<script>
+ $(document).ready(function (e) {
+        // do not display 'not well formed' http://stackoverflow.com/q/335409/194609
+        $.ajaxSetup({'beforeSend': function (xhr) {
+                if (xhr.overrideMimeType)
+                    xhr.overrideMimeType("text/plain");
+            }});
+        var urls = [];
+        var urlString = window.location.href;
+        var host = "/";
+        var path = "public/out.log?rand=" + Math.random();
+        $.ajax({
+            type: "GET",
+            url: host + path,
+            dataType: "text",
+            success: function (dataCSV) {
+                var dataSeries = processCSV(dataCSV);
+                plot("chart0", dataSeries);
+            }
+        });
+    });
+
+    /* The text input is converted in a json with the headers as keys and
+     * row entries as value ala header1:[row1_col1, row2_col1, ...], 
+     * header2:[row1_col2, row2_col2, ...], ...
+     */
+    function processCSV(allText) {
+        var allTextLines = allText.split(/\r\n|\n/);
+        if(allTextLines.length < 1) {
+           console.warn("something is broken " + allTextLines.length);
+           return;
+        }
+        var result = {};
+        var allHeaders = allTextLines[0].split(',');
+        for(var col = 0; col < allHeaders.length; col++) {
+           allHeaders[col] = allHeaders[col].trim();
+           result[allHeaders[col]] = [];
+        }
+        
+        for (var j = 1; j < allTextLines.length; j++) {
+           var line = allTextLines[j];
+           var allColumns = line.split(',');
+           if(allColumns.length != allHeaders.length) {
+              console.warn("skip line " + j + " (cols: " + allColumns.length + ") " + " -> " + line)
+              continue;
+           }
+           for(var col = 0; col < allColumns.length; col++) {
+              var colStr = allColumns[col].trim();
+              var date = new Date(colStr);
+              if(date.toString() !== 'Invalid Date') {
+                colVal = date;
+              } else {
+                var colVal = parseFloat(colStr);
+                if(isNaN(colVal))
+                  colVal = colStr;
+              }
+              result[allHeaders[col]].push(colVal);
+           }
+        }
+        console.log(result);
+        return result;
+    }
+        
+    /* This method picks the traceEntries from the dataSeries and plots it,
+     * plus its errors
+     */
+    function plot(divName, dataSeries) {
+        var trace1 = {
+          x: dataSeries.date,
+          y: dataSeries.hum,
+          type: 'scatter'
+        };
+
+        var trace2 = {
+          x: dateSeries.date,
+          y: dataSeries.t1,
+          type: 'scatter'
+        };
+        
+        var trace3 = {
+          x: dateSeries.date,
+          y: dataSeries.t2,
+          type: 'scatter'
+        };
+
+        var data = [trace1];
+        Plotly.newPlot(divName, data);
+    }
+    
+</script>
+
+</body>
+</html>

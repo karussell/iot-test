@@ -29,7 +29,7 @@ app.post("/", function(req, res) {
     var s = new Date().toISOString() + "," + req.rawBody
     lastEntry = s
     console.log(s)
-    var stream = fs.createWriteStream("out.log", {flags:'a'})
+    var stream = fs.createWriteStream(__dirname + "/public/out.log", {flags:'a'})
     stream.write(s + "\n")
     stream.end()
     res.send('ok')
