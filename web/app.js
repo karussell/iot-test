@@ -6,8 +6,14 @@ var express = require("express");
 var app = express();
 
 var lastEntry = "not initialized";
-
 app.use('/public', express.static(__dirname + '/public'));
+
+const logFile = __dirname + "/public/out.log"
+if (!fs.existsSync(logFile)) {
+    var stream = fs.createWriteStream(logFile)
+    stream.write("date,hum,t1,t2\n")
+    stream.end()
+}
 
 function rawBody(req, res, next) {
   req.setEncoding('utf8');
@@ -29,7 +35,7 @@ app.post("/", function(req, res) {
     var s = new Date().toISOString() + "," + req.rawBody
     lastEntry = s
     console.log(s)
-    var stream = fs.createWriteStream(__dirname + "/public/out.log", {flags:'a'})
+    var stream = fs.createWriteStream(logFile, {flags:'a'})
     stream.write(s + "\n")
     stream.end()
     res.send('ok')
