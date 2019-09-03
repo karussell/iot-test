@@ -1,4 +1,8 @@
-# Get Started
+# What's this?
+
+A playground to record temperature or detect weather changes with homegrown software.
+
+![image](https://user-images.githubusercontent.com/129644/64167917-b325a000-ce4a-11e9-8ffc-fabad79eb2c8.png)
 
 ## Hardware
 
