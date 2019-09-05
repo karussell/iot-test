@@ -22,8 +22,7 @@
 #define WITH_DHT false
 #define WITH_DS false
 #define WITH_WIFI true
-#define DELAY_IN_S 120
-
+#define DELAY_IN_S 150
 
 OneWire oneWire(26); // a 4.7K resistor is necessary between red & yellow
 DallasTemperature dsSensors(&oneWire);
@@ -157,8 +156,7 @@ void loop() {
     http.end();
     WiFi.disconnect();
 
-    delay(DELAY_IN_S * 1000);
-    // TODO NOW: instead of delay go to deep sleep. But do this only if we have a battery pack that does not disable itself after too few mA
-    // esp_deep_sleep_start();
+    // for battery usage this is very nice. But stable wifi usage with battery seems to be only possible with 3.6V Li-ion
+    esp_deep_sleep_start();
   }
 }
