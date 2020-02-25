@@ -20,9 +20,24 @@ Add some sensors like DHT22, a breadboard and a [mini display](https://www.az-de
 
 For linux you additionally need to create some special stuff in `/etc/udev/rules.d/99-platformio-udev.rules` and then do `sudo chmod 666 /dev/ttyUSB0`. Internet should help you further if you have problems here.
 
-Compile and upload the main.cpp to your ESP32. Maybe start with the Serial communication, add the display and then the sensor.
+Compile and upload the main.cpp to your ESP32. Maybe start with the Serial communication, add the display and then the sensor. 
 
-Finally make the WLAN and server communication working.
+The display pins should be connected via:
+
+| ESP | OLED|
+|-----|-----|
+| GND | GND |
+| 3V3 | VCC |
+| G21 | SDA |
+| G22 | SCL |
+
+The sensor DHT sensor is expected to be connected with pin G27 (DHT library).
+
+The DS sensor is expected to be connected with pin G26 (using the OneWire and DallasTemperature library).
+
+### WLAN and server communication working
+
+Change the WLAN credentials in code including the host where your node.js web app runs, e.g. localhost:8000. See the web subfolder for more details.
 
 ### Server
 
