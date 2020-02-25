@@ -15,7 +15,7 @@ Add some sensors like DHT22, a breadboard and a [mini display](https://www.az-de
 
  * install [vscode](https://code.visualstudio.com/) (open source and runs on all major platforms)
  * install platformIO for vscode under "View"->"Extensions"
- * then inside the platformIO plugin install the "expressiv 32" platform (under "platforms")
+ * then inside the platformIO plugin install the "espressif 32" platform (under "platforms")
  * install clang compiler for your operating system
 
 For linux you additionally need to create some special stuff in `/etc/udev/rules.d/99-platformio-udev.rules` and then do `sudo chmod 666 /dev/ttyUSB0`. Internet should help you further if you have problems here.
