@@ -44,7 +44,9 @@ void setup() {
   esp_sleep_enable_timer_wakeup(DELAY_IN_S * 1e6);
 
   if(WITH_OLED) {
+    // default pins SDA=21 and SCL=22 in pins_arduino.h
     Wire.begin();
+    // Wire.begin(21, 22, frequency=0); // frequency 0 means do not change default of 100kHz
     oled.init();
     oled.clearDisplay();
     // oled.setFont(font5x7); 
